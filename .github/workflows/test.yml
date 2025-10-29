@@ -7,6 +7,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.48.0
     services:
       postgres:
         image: postgres:latest
@@ -23,36 +25,17 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          
-      - uses: actions/cache@v3
-        with:
-          path: |
-            venv
-            ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
-      - name: Install system dependencies for Playwright
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libasound2t64 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpangocairo-1.0-0 libgtk-3-0
-            
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
           pip install -r requirements.txt
-          playwright install chromium
+
       - name: Run tests
         run: |
-          source venv/bin/activate
           pytest tests/unit/ --cov=src --junitxml=test-results/junit.xml
           pytest tests/integration/
           pytest tests/e2e/
+
   security:
     needs: test
     runs-on: ubuntu-latest
