@@ -55,9 +55,14 @@ jobs:
           severity: 'CRITICAL,HIGH'
   deploy:
     needs: security
-    if: "github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''"
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Skipping deploy — no DockerHub credentials
-      run: echo "Deployment skipped: DockerHub credentials not set."
+      - name: Check for DockerHub credentials
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "Deployment skipped: DockerHub credentials not set."
+            exit 0
+          fi
+          echo "Credentials found. Proceeding with deployment..."
+
